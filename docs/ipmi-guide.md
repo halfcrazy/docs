@@ -180,21 +180,21 @@ Example output (identical for both commands, as there is a single builtin FRU de
 ```
 FRU Device Description : Builtin FRU Device (ID 0)
  Product Manufacturer  : KubeVirt
- Product Name          : KubeVirtBMC
- Product Version       : c935d5d2d6b11b345154916e339088c4a61e84ba
- Product Serial        : default/testvm
+ Product Name          : default/testvm
+ Product Serial        : 941324e3-c772-4626-b319-f03e0e01cbb1
 ```
 
 | Field | Value |
 |-------|-------|
 | Product Manufacturer | `KubeVirt` |
-| Product Name | `KubeVirtBMC` |
-| Product Version | Git commit SHA of the virtbmc build |
-| Product Serial | VM identity in `<namespace>/<vm-name>` form |
+| Product Name | VM identity in `<namespace>/<vm-name>` form |
+| Product Serial | The VM's SMBIOS serial number (`spec.template.spec.domain.firmware.serial`), or the VM's Kubernetes UID when it is empty |
+
+The builtin FRU device is the one the BMC sits on, so its Product Info Area describes the managed system — the virtual machine — rather than the BMC itself. `Product Version` is therefore left empty (the virtbmc build is reported as the [Redfish Manager](redfish-guide.md#get-manager-information) `FirmwareVersion`), and `ipmitool` omits empty FRU fields, which is why that line is absent above. KubeVirt fills `spec.template.spec.domain.firmware` when the VM is created; set those fields yourself to control the identity the BMC reports.
 
 !!! note "FRU field length limit"
 
-    FRU fields are truncated to 63 bytes per the IPMI specification. Use the [Redfish API](redfish-guide.md#system-information) to read the full, untruncated VM identity (`SerialNumber`).
+    A FRU field holds at most 63 bytes per the IPMI specification. A long `<namespace>/<vm-name>` is truncated at 63 bytes in `Product Name`; the serial is normally a 36-character UUID and fits as-is.
 
 ## Boot Device Configuration
 
