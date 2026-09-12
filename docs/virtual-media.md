@@ -102,11 +102,14 @@ EOF
 By default, the DataVolume created on virtual media insert uses your cluster's
 default StorageClass. If your cluster has no default StorageClass, or you want
 virtual media images to land on a specific StorageClass, set
-`spec.storageClassName` on the `VirtualMachineBMC` resource:
+`spec.redfish.virtualMedia.storage.storageClassName` on the `VirtualMachineBMC` resource:
 
 ```yaml
 spec:
-  storageClassName: my-storage-class
+  redfish:
+    virtualMedia:
+      storage:
+        storageClassName: my-storage-class
 ```
 
 ## Volume Mode and Size Margin
@@ -132,6 +135,35 @@ Two more virtual media settings are configurable on the `VirtualMachineBMC`:
     Invalid or non-positive values mean no padding.
 
 In [standalone mode](standalone.md), where no `VirtualMachineBMC` exists, these settings are passed as `--volume-mode` and `--datavolume-size-margin` flags.
+
+## HTTPS and TLS
+
+Images served over https are verified against the system trust store by default — both by the agent (when it sizes the image) and by CDI (when it imports it). A self-signed or otherwise untrusted image server is rejected. `spec.redfish.virtualMedia.tls` changes that:
+
+- **Skip verification entirely**:
+
+    ```yaml
+    spec:
+      redfish:
+        virtualMedia:
+          tls:
+            insecureSkipVerify: true
+    ```
+
+- **Trust an additional CA bundle**: create a ConfigMap holding the PEM bundle under the key `ca.pem`, in the same namespace as the `VirtualMachineBMC`, and reference it:
+
+    ```yaml
+    spec:
+      redfish:
+        virtualMedia:
+          tls:
+            caBundleConfigMapRef:
+              name: my-image-server-ca
+    ```
+
+    The referenced ConfigMap is read by the agent at insert time and by CDI at import time; a missing ConfigMap fails the insert.
+
+In [standalone mode](standalone.md) these are the `--virtual-media-insecure-skip-verify` and `--virtual-media-ca-bundle-configmap` flags. The flag value is the ConfigMap name in the VM's namespace; reading it needs `get` on `configmaps` (already covered by the in-cluster agent's ClusterRole).
 
 ## Storage Overhead
 

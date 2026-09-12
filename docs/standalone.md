@@ -40,6 +40,10 @@ rules:
   - apiGroups: ["cdi.kubevirt.io"]
     resources: ["datavolumes"]
     verbs: ["create", "delete"]
+  # Only needed with --virtual-media-ca-bundle-configmap
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
 ```
 
 ## Running
@@ -106,6 +110,8 @@ curl -u admin:admin123 http://127.0.0.1:10080/redfish/v1/Systems/1
 | `--storage-class` | cluster default | StorageClass for virtual media DataVolumes |
 | `--volume-mode` | CDI default | Volume mode for virtual media DataVolumes: `block` or `filesystem` |
 | `--datavolume-size-margin` | `0` | Pad virtual media DataVolume size by this many percent (see [Volume Mode and Size Margin](virtual-media.md#volume-mode-and-size-margin)) |
+| `--virtual-media-insecure-skip-verify` | `false` | Skip TLS certificate verification when fetching virtual media images over https (see [HTTPS and TLS](virtual-media.md#https-and-tls)) |
+| `--virtual-media-ca-bundle-configmap` | | ConfigMap (in the VM's namespace, key `ca.pem`) with the CA bundle trusted when fetching virtual media images over https |
 
 Credentials are always passed via the `BMC_USERNAME` and `BMC_PASSWORD` environment variables.
 
@@ -123,5 +129,5 @@ Delete the file to reset the BMC to its default boot behavior.
 
 - No `VirtualMachineBMC` CR, Deployment, Service, or Secret is created — you reach the agent directly at `--address` and its ports
 - Boot override state lives in the local state file instead of the CR status
-- Virtual media settings come from flags (`--storage-class`, `--volume-mode`, `--datavolume-size-margin`) instead of the `VirtualMachineBMC` CR spec and annotations
+- Virtual media settings come from flags (`--storage-class`, `--volume-mode`, `--datavolume-size-margin`, `--virtual-media-insecure-skip-verify`, `--virtual-media-ca-bundle-configmap`) instead of the `VirtualMachineBMC` CR spec and annotations
 - Nothing garbage-collects the agent; its lifecycle is yours to manage
